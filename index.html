@@ -1,0 +1,261 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>PACT - Module transition</title>
+
+		<link rel="stylesheet" href="css/reset.css">
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/telecom.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/github.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+
+				<section class="cover" data-background=""  data-state="no-title-footer no-progressbar has-dark-background">
+
+					<h2 id='coverh2'>Module Transition</h2>
+					<h1  id='title_seminar'> PACT</h1>
+					<h3><a href="https://matfontaine.github.io/PACT-MFCC", id='github_url'>matfontaine.github.io/PACT-TRANSITION</a></h3>
+					<p id='coverauthors'>
+						Mathieu FONTAINE<br />
+						mathieu.fontaine@telecom-paris.fr
+					</p>
+					<p id="date">
+					2022-2023</br>
+					</p>
+					<p>
+					<img src="css/theme/img/logo-Telecom.svg" id="telecom" class="logo" alt="">
+					<aside class="notes">
+						<ul><li>We will consider historical audio source separation technique</li>
+									<li>e.g. no deep learning extensions or nonnegative matrix factorization</li>
+								<li>the Handbook for that course is available on the moodle (PAM/Audio_source_separation)</li>
+						</ul>
+					</aside>
+				</section>
+
+				<!-- Outline of the presentation -->
+				<section>
+				<h1>Attentes du module</h1>
+				<ul>
+					<li>Comprendre comment effectuer une transition automatique entre morceaux</li>
+					<li>Compréhension de l'analyse en composante principale (ACP)</li>
+					<li>Implémentation sous python</li>
+					<li>Application au projet PACT (pourquoi ce module est adapté etc.)</li>
+					<li>Résultats avec la méthode implémentée</li>
+				</ul>
+
+				<h2>Livrable</h2>
+				<ul>
+					<li>Code de votre groupe en Python avec quelques résultats.</li>
+				</ul>
+
+				<h2>Pré-requis recommandé (par ordre de recommendation)</h2>
+				<ul>
+					<li>Module Onset</li>
+					<li>Module Time-stretching</li>
+					<li>Module Chroma</li>
+				</ul>
+
+</section>
+
+<section>
+	<h1>Plan</h1>
+	<h2>I - Transitions </h2>
+	<h2>II - Caractéristiques notables</h2>
+	<h2>III - Analyse en composantes principale </h2>
+</section>
+<section class="cover" data-background="" data-state="no-title-footer no-progressbar has-dark-background">
+	<h2 id='coverh2'>I - Transitions</h2>
+
+</section>
+<section>
+	<h2>Définition</h2>
+	<ul>
+		<li>La transition entre deux musiques est l'action de changer de musique.</li>
+		<li>Elle peut-être faite naturellement entre la fin et le début d'un morceau</li>
+		<li>Elle peut aussi être employée en plein milieu d'un morceau.</li>
+</ul>
+</center>
+<p>
+<div class="remarque">Naturellement, on s'interesse au dernier point.</div>
+</p>
+
+<h3>Transition entre deux morceaux</h3>
+<ul>
+<li>Les transitions "classiques" sont faites en utilisant un <em>fade-out</em> et <em>fade-in</em>
+<li>Ce changement est le plus souvent fait suivant une décroissance exponentielle du volume de la première musique et une croissance exponentielle du volume de la seconde</li>
+</li>
+<center style="margin-top:-1em;"><figure>
+	<img src="figures/images/transition.png" width="50%">
+	<figcaption><em>transition entre deux morceaux (selon Bittner)</em></figcaption>
+	</figure>
+	</center>
+</ul>
+</section>
+<section>
+<h2>Concordance de la transition</h2>
+<ul>
+<li>Une simple transition comme précédemment ne peut généralement pas s'adapter à n'importe quelle transition</li>
+<li>Certaines caractéristiques (dont nous parlerons après) sont très importantes</li>
+<li>L'une d'elle étant le tempo, le pitch shifting ou time stretching permettrait d'améliorer
+	la transition et d'obtenir un résultat plus probant
+</li>
+
+</ul>
+<div class="remarque">
+<b>Exemple :</b> une chanson à un tempo de 130 qui concorderait bien avec une autre à 140. Un time stretching (PSOLA) pour obtenir un tempo à 130
+et un alignement ferait une très bonne transition.</div>
+</section>
+
+<section class="cover" data-background="" data-state="no-title-footer no-progressbar has-dark-background">
+	<h2 id='coverh2'>II - Caractéristiques notables</h2>
+</section>
+<section>
+	<h2>Similarité musicale</h2>
+Les techniques employés par Slaney (cf. <a href="https://ismir2008.ismir.net/papers/ISMIR2008_148.pdf"> ici</a>) pour classer les musiques entre elles repose sur, entre autres, les paramètres suivants : 
+<ul>
+	<li>La Loudness (puissance du morceau). Regarder <a href ="https://csteinmetz1.github.io/pyloudnorm-eval/paper/pyloudnorm_preprint.pdf"> ici</a> pour plus de détails</li>
+	<li>Le tempo</li>
+	<li>La time signature (4/4, 3/4 etc.)</li>
+
+</ul>
+
+</section>
+
+<section>
+	<h2>Autres informations</h2>
+	Il est cependant important aussi de prendre en compte d'autres composantes comme 
+	<ul>
+		<li>Le pitch (<a href="https://github.com/marl/crepe">CREPE</a> permet d'extraire cette information)</li>
+		<li>accords, mode, gamme etc. (peuvent être estimés via les chromas)</li>
+		<li>Le genre musical </li>
+	</ul>
+
+	<center style="margin: top -0.5em;"><figure>
+		<img src="figures/images/key_mode.png" width="40%">
+		<figcaption><em>représentation spatiale des accords (selon Bittner)</em></figcaption>
+		</figure>
+		</center>
+</section>
+
+<section class="cover" data-background="" data-state="no-title-footer no-progressbar has-dark-background">
+	<h2 id='coverh2'>III - Analyse en composantes principales</h2>
+
+</section>
+
+<section>
+	<h2>Motivations</h2>
+	<ul>
+		<li>Nous avons énuméré un certains nombres de caractéristiques</li>
+		<li>Cependant, il est difficile de classifier les similarités entre elles</li>
+		<li>En effet, trop de variables explicatives est difficilement interprétable</li>
+	</ul>
+	<p>
+		<div class="remarque">Idée: réduire la dimension tout en préservant l'information.</div>
+		</p>
+</section>
+
+<section>
+	<h2>Notion d'analyse en composantes principales (ACP) (1/2)</h2>
+	<ul>
+		<li>Soit $X \in \mathbb{R}^{N \times D}$ une matrice avec $N$ échantillons et $D$ variables.</li>
+		<li>On suppose que chacune des colonnes est centrée réduite. i.e. pour une colonne $\bold{x}_d$ :
+			<center>$$
+				\bold{x}_d (n) = \frac{\bold{x}_d (n) - \bold{\bar{x}}_d}{\text{std}(\bold{x}_d)}
+			$$	
+		</center>
+		</li>
+		<li>On estime la covariance, notée $\mathrm{Cov}(\bold{x}_d, \bold{x}_{d^\prime}) = \frac{1}{N}\sum_{n=1}^{N}\bold{x}_d(n)\bold{x}_{d^\prime}(n)$, entre chaque variable. 
+		</li>
+		<li>On obtient alors une matrice de covariance $A \in \mathbb{R}_{+}^{D \times D}$ tel que : 
+			<center>$$
+			\mathrm{A=\left[\begin{array}{ccc}
+\mathrm{Cov}\left(\bold{x}_{1},\bold{x}_{1}\right) & \dots & \mathrm{Cov}\left(\bold{x}_{1},\bold{x}_{d}\right)\\
+\vdots & \ddots & \vdots\\
+\mathrm{Cov}\left(\bold{x}_{d},\bold{x}_{1}\right) & \dots & \mathrm{Cov}\left(\bold{x}_{d},\bold{x}_{d}\right)
+\end{array}\right]}
+			$$</center>
+		</li>
+</ul>	
+
+	
+</section>
+
+<section>
+	<h2>Notion d'analyse en composantes principales (ACP) (2/2)</h2>
+	<ul>
+		<li>On calcule alors les valeurs propres de $A$</li>
+		<li>On les range par ordre croissant et on choisit "une valeur optimale"</li>
+		<li>Ci-dessous par exemple, $2$ dimensions sont suffisantes pour représenter 70% de la variance</li>
+		<li>On prend alors un vecteur propre associée à la plus grande valeur propre et le second mais perpendiculaire au premier vecteur propre</li>
+		<li>On obtient par exemple deux vecteurs propres de taille $D$. Notons $P \in \mathbb{R}^{2\times D}$ la matrice contenant ces vecteurs propres.</li>
+		<li>Les nouvelles données projetées $\tilde{M} \in \mathbb{R}^{2 \times N} $ sont alors :
+			<center>
+				$$
+				$\tilde{M} = P\tilde{X}^\top$
+				$$
+			</center>
+		</li>
+		<li>On peut alors calculer dans un espace de plus petite dimension le point adéquat 
+	</ul>	
+
+
+	
+</section>
+
+</div>
+<div class='footer'>
+	<img src="css/theme/img/logo-Telecom.svg" alt="Logo"/>
+	<div id="middlebox">PACT - Module Transition</div>
+	<ul>
+	</ul>
+</div>
+			</div>
+
+		</div>
+
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				history: true,
+				center: false,
+				slideNumber: true,
+				minScale: 0.1,
+				maxScale: 5,
+				transition: 'none', //
+
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/math-katex/math-katex.js', async: true },
+					{ src: 'plugin/reveald3/reveald3.js' },
+					{ src: 'plugin/highlight/highlight.js', async: true }
+				]
+			});
+		</script>
+
+	</body>
+
+</html>
